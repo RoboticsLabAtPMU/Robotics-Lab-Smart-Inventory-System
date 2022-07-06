@@ -1,4 +1,5 @@
 from tkinter import *
+import retrainer
 
 class App:
     def __init__(self):
@@ -28,7 +29,8 @@ class App:
         exit_button.pack(padx=10, pady=5)
 
     def retrain_ims(self):
-        print("Retraining IMS")
+        message = retrainer.retrainer()
+        
 
 if __name__ == "__main__":
     app = App()

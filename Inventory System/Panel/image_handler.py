@@ -7,7 +7,7 @@ dilation_kernel = np.ones((7,7), np.uint8)
 blur_kernel = (5,5)
 fgbg = cv2.createBackgroundSubtractorMOG2()
 
-images_dir = "/media/gufran/GsHDD/Work/Projects/InventoryManagementSystem/Panel/Images"
+images_dir = "/media/gufran/GsHDD/Work/Projects/Robotics-Lab-Smart-Inventory-System/Inventory System/Panel/Images"
 
 def process(img):
     img = cv2.blur(img, blur_kernel)
