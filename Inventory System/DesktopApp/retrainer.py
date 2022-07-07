@@ -52,14 +52,18 @@ def retrainer():
     model.fit(
         x=train_batches,
         steps_per_epoch=len(train_batches),
-        epochs=10,
+        epochs=5,
         verbose=1    
     )
-    model.save(MODEL_DIR+'/model.h5')
+    model.save(MODEL_DIR+'/model.h5', 'w')
+
+    print("\nModel Saved!")
+
+    with open(MODEL_DIR+ '/labels.txt', 'w') as f:
+      f.write("|".join(items))
+    
+    print("Done!")
 
     return "Done! You may now safely remove the USB"
   except:
     return "There was an error. Please try again."
-
-
-retrainer()

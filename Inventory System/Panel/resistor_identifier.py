@@ -1,72 +1,49 @@
 import cv2
 import numpy as np
 
-dir = "/home/gufran/Pictures/resistor.jpg"
+frameWidth = 640
+frameHeight = 480
 
-def empty(a):
+cap = cv2.VideoCapture(0)
+cap.set(3, frameWidth)
+cap.set(4, frameHeight)
+
+def empty():
     pass
 
+cv2.namedWindow("Parameters")
+cv2.resizeWindow("Parameters", 640, 240)
+cv2.createTrackbar("Threshold1","Parameters",23,255,empty)
+cv2.createTrackbar("Threshold2","Parameters",20,255,empty)
 
+def getContours(img,imgContour):
+    contours,heirarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if area > 1000:
+            cv2.drawContours(imgContour, cnt, -1, (255,0,255), 7)
+            peri = cv2.arcLength(cnt, True)
+            approx = cv2.approxPolyDP(cnt, 0.02*peri, True)
 
-cv2.namedWindow("TrackBars")
-cv2.resizeWindow("TrackBars",640,240)
-cv2.createTrackbar("Hue Min","TrackBars",0,179,empty)
-cv2.createTrackbar("Hue Max","TrackBars",19,179,empty)
-cv2.createTrackbar("Sat Min","TrackBars",110,255,empty)
-cv2.createTrackbar("Sat Max","TrackBars",240,255,empty)
-cv2.createTrackbar("Val Min","TrackBars",153,255,empty)
-cv2.createTrackbar("Val Max","TrackBars",255,255,empty)
+            x,y,w,h = cv2.boundingRect(approx)
+            cv2.rectangle(imgContour, (x,y), (x+w, y+h), (0,255,0), 5)
 
-h_min = cv2.getTrackbarPos("Hue Min","TrackBars")
-h_max = cv2.getTrackbarPos("Hue Max", "TrackBars")
-s_min = cv2.getTrackbarPos("Sat Min", "TrackBars")
-s_max = cv2.getTrackbarPos("Sat Max", "TrackBars")
-v_min = cv2.getTrackbarPos("Val Min", "TrackBars")
-v_max = cv2.getTrackbarPos("Val Max", "TrackBars")
+while True:
+    success, img = cap.read()
+    imgContour = img.copy()
 
+    imgBlur = cv2.GaussianBlur(img, (7,7), 1)
+    imgGray = cv2.cvtColor(imgBlur, cv2.COLOR_BGR2GRAY)
 
-img = cv2.imread(dir)
+    threshold1 = cv2.getTrackbarPos("Threshold1","Parameters")
+    threshold2 = cv2.getTrackbarPos("Threshold2","Parameters")
+    imgCanny = cv2.Canny(imgGray,threshold1,threshold2)
 
-white = np.full((img.shape[0], img.shape[1], 3),255, dtype = np.uint8)
+    imgDil = cv2.dilate(imgCanny, np.ones((5,5)), iterations = 1)
 
+    getContours(imgDil, imgContour)
 
-img_blur = cv2.GaussianBlur(img, (17,17), 0)
-# img_edged= cv2.Canny(img_blur,0,120)
-# dilated_img = cv2.dilate(img_edged,(7,7),iterations = 7)
-# dilated_inv_img = 255-dilated_img
-
-hsv = cv2.cvtColor(img_blur, cv2.COLOR_BGR2HSV)
-
-
-lower_black = np.array([0, 0, 0])
-upper_black = np.array([180,55,100])
-
-lower_brown = np.array([15,100,40])
-upper_brown = np.array([21,255,255])
-
-lower_blue = np.array([60,25,140])
-upper_blue = np.array([180,255,255])
-
-# lower_gold = np.array([20,100,100])
-# upper_gold = np.array([21,255,255])
-
-
-black_mask = cv2.inRange(hsv, lower_black, upper_black)
-blue_mask = cv2.inRange(hsv, lower_blue, upper_blue)
-# gold_mask = cv2.inRange(hsv, lower_gold, upper_gold)
-
-
-
-
-res = cv2.bitwise_and(img, img, mask=black_mask) + cv2.bitwise_and(img, img, mask=blue_mask) + white
-
-cv2.imshow("main",img)
-# cv2.imshow("blur",img_blur)
-# cv2.imshow("edged",img_edged)
-# cv2.imshow("dilated",dilated_img)
-# cv2.imshow("dilated inv",dilated_inv_img)
-cv2.imshow("hsv",hsv)
-cv2.imshow("res",res)
-
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    cv2.imshow("img",imgContour)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
